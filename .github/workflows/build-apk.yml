@@ -29,28 +29,26 @@ jobs:
     
     - name: Create Capacitor project
       run: |
-        mkdir -p capacitor-project
-        cd capacitor-project
+        mkdir -p www
+        cp heart_rate_precision_web.html www/index.html
+        cp manifest.json www/ 2>/dev/null || true
+        cp sw.js www/ 2>/dev/null || true
         npm init -y
         npm install @capacitor/core @capacitor/android @capacitor/cli
-        npx cap init "rPPG检测" "com.rppg.app" --web-dir ../
+        npx cap init "rPPG检测" "com.rppg.app" --web-dir www
     
     - name: Add Android platform
-      run: |
-        cd capacitor-project
-        npx cap add android
+      run: npx cap add android
     
     - name: Copy web assets
-      run: |
-        cd capacitor-project
-        npx cap copy
+      run: npx cap copy
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
     - name: Build APK
       run: |
-        cd capacitor-project/android
+        cd android
         chmod +x gradlew
         ./gradlew assembleDebug
     
@@ -58,7 +56,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: rPPG-App-APK
-        path: capacitor-project/android/app/build/outputs/apk/debug/app-debug.apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
     
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -66,6 +64,6 @@ jobs:
       with:
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        files: capacitor-project/android/app/build/outputs/apk/debug/app-debug.apk
+        files: android/app/build/outputs/apk/debug/app-debug.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
