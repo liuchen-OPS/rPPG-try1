@@ -1,0 +1,71 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Install Capacitor CLI
+      run: npm install -g @capacitor/cli
+    
+    - name: Create Capacitor project
+      run: |
+        mkdir -p capacitor-project
+        cd capacitor-project
+        npm init -y
+        npm install @capacitor/core @capacitor/android @capacitor/cli
+        npx cap init "rPPG检测" "com.rppg.app" --web-dir ../
+    
+    - name: Add Android platform
+      run: |
+        cd capacitor-project
+        npx cap add android
+    
+    - name: Copy web assets
+      run: |
+        cd capacitor-project
+        npx cap copy
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Build APK
+      run: |
+        cd capacitor-project/android
+        chmod +x gradlew
+        ./gradlew assembleDebug
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: rPPG-App-APK
+        path: capacitor-project/android/app/build/outputs/apk/debug/app-debug.apk
+    
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        name: Release v${{ github.run_number }}
+        files: capacitor-project/android/app/build/outputs/apk/debug/app-debug.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
