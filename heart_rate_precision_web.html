@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#16213e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="rPPG检测">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%23ff6b6b' width='192' height='192' rx='20'/%3E%3Ctext x='96' y='120' font-size='80' text-anchor='middle' fill='white'%3E%E2%9D%A4%3C/text%3E%3C/svg%3E">
     <title>rPPG生理指标检测系统</title>
     <style>
         * {
@@ -5074,6 +5080,34 @@
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
+        });
+        
+        // 注册Service Worker (PWA支持)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function(registration) {
+                        console.log('Service Worker 注册成功:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Service Worker 注册失败:', error);
+                    });
+            });
+        }
+        
+        // 检测PWA安装事件
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // 阻止默认安装提示
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('PWA可以安装');
+        });
+        
+        // 检测PWA已安装
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA已安装');
+            deferredPrompt = null;
         });
     </script>
 </body>
