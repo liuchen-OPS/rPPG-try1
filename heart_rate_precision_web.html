@@ -5056,21 +5056,60 @@
         }
         
         // 页面加载初始化
-        window.addEventListener('DOMContentLoaded', function() {
-            startBtn.addEventListener('click', startDetection);
-            stopBtn.addEventListener('click', stopDetection);
+        function initButtons() {
+            console.log('[初始化] 绑定按钮事件');
             
-            // 移动端触摸支持
-            startBtn.addEventListener('touchstart', function(e) {
+            // 移除旧的事件监听器（防止重复绑定）
+            startBtn.replaceWith(startBtn.cloneNode(true));
+            stopBtn.replaceWith(stopBtn.cloneNode(true));
+            
+            // 重新获取按钮引用
+            const newStartBtn = document.getElementById('startBtn');
+            const newStopBtn = document.getElementById('stopBtn');
+            
+            // 点击事件
+            newStartBtn.addEventListener('click', function(e) {
+                console.log('[点击] 开始检测按钮');
                 e.preventDefault();
+                e.stopPropagation();
                 startDetection();
             });
             
-            stopBtn.addEventListener('touchstart', function(e) {
+            newStopBtn.addEventListener('click', function(e) {
+                console.log('[点击] 停止检测按钮');
                 e.preventDefault();
+                e.stopPropagation();
                 stopDetection();
             });
-        });
+            
+            // 触摸事件（移动端）
+            newStartBtn.addEventListener('touchend', function(e) {
+                console.log('[触摸] 开始检测按钮');
+                e.preventDefault();
+                e.stopPropagation();
+                startDetection();
+            });
+            
+            newStopBtn.addEventListener('touchend', function(e) {
+                console.log('[触摸] 停止检测按钮');
+                e.preventDefault();
+                e.stopPropagation();
+                stopDetection();
+            });
+            
+            console.log('[初始化] 按钮事件绑定完成');
+        }
+        
+        // 多种方式确保初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initButtons);
+        } else {
+            initButtons();
+        }
+        
+        // 延迟再次初始化（确保WebView中也能绑定）
+        setTimeout(initButtons, 500);
+        setTimeout(initButtons, 1000);
         
         // 清理资源
         window.addEventListener('beforeunload', function() {
