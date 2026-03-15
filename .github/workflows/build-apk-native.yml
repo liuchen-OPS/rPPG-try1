@@ -1,0 +1,57 @@
+name: Build APK (Native Android)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Copy HTML to assets
+      run: |
+        mkdir -p android-app/app/src/main/assets
+        cp heart_rate_precision_web.html android-app/app/src/main/assets/
+        cp manifest.json android-app/app/src/main/assets/ 2>/dev/null || true
+        cp sw.js android-app/app/src/main/assets/ 2>/dev/null || true
+    
+    - name: Build APK
+      run: |
+        cd android-app
+        chmod +x gradlew
+        ./gradlew assembleDebug
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: rPPG-App-APK-Native
+        path: android-app/app/build/outputs/apk/debug/app-debug.apk
+    
+    - name: Rename APK
+      run: |
+        cd android-app/app/build/outputs/apk/debug
+        mv app-debug.apk rPPG-检测-$(date +%Y%m%d).apk
+    
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      with:
+        tag_name: v${{ github.run_number }}-native
+        name: rPPG检测 v${{ github.run_number }}
+        files: android-app/app/build/outputs/apk/debug/rPPG-检测-*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
